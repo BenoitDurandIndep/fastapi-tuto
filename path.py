@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Path,  Query
 from typing import Annotated
 
+#https://fastapi.tiangolo.com/tutorial/path-params-numeric-validations/
 app = FastAPI()
 
 
