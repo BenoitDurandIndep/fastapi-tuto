@@ -1,6 +1,6 @@
-from fastapi import FastAPI,Path,  Query
+from fastapi import FastAPI, Path,Body,  Query
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Annotated
 
 
@@ -11,10 +11,18 @@ class ModelName(str, Enum):
 
 
 class Item(BaseModel):
-    name: str
-    description: str | None = None
-    price: float
-    tax: float | None = None
+    name: str = Field(example="Foo")
+    description: str | None = Field(default=None, example="A nice item")
+    price: float = Field(example=12.3)
+    tax: float | None = Field(default=None, example=1.23)
+
+    class Config:
+        schema_extra = {
+            "name": "Foo",
+            "descripton": "A nice item",
+            "price": 12.3,
+            "tax": 1.23
+        }
 
 
 app = FastAPI()
@@ -103,12 +111,21 @@ async def create_item(item: Item):
     return item_dict
 
 
-@app.put("/items/{item_id}")
+@app.put("/items-create/{item_id}")
 async def create_item(item_id: int, item: Item, q: str | None = None):
     result = {"item_id": item_id, **item.dict()}
     if q:
         result.update({"q": q})
     return result
+
+
+@app.put("/items-update/{item_id}")
+async def update_item(item_id: int, item: Annotated[Item, Body(example={"name": "Foo",
+                                                                        "description": "A nice item",
+                                                                        "price": 12.3,
+                                                                        "tax": 1.23},),],):
+    results = {"item_id": item_id, "item": item}
+    return results
 
 
 @ app.get("/")
