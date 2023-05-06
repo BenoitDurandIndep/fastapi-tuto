@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
 from typing import Any,Union
@@ -7,7 +7,7 @@ app = FastAPI()
 
 class BaseItem(BaseModel):
     description:str
-    type:str
+    type:str = "thing"
     name:str
 
 class Item(BaseItem):
@@ -48,7 +48,7 @@ items2 = {
     },
 }
 
-@app.post("/items/")
+@app.post("/items/",status_code=status.HTTP_201_CREATED)
 async def create_items(item: Item) -> Item:
     return item
 

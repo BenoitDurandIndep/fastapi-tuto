@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Annotated
 from fastapi import FastAPI, Path, Body
 from pydantic import BaseModel, Field, HttpUrl
@@ -33,8 +34,11 @@ class Offer(BaseModel):
     price: float
     items: list[Item]
 
+class Tags(Enum):
+    items = "items"
+    users = "users"
 
-@app.put("/items/{item_id}")
+@app.put("/items/{item_id}",tags=[Tags.items])
 async def update_item(
     item_id: Annotated[int, Path(title="The ID of the item", ge=0, le=1000)],
     q: str | None = None,
@@ -48,7 +52,7 @@ async def update_item(
     return results
 
 
-@app.put("/items_user/{item_id}")
+@app.put("/items_user/{item_id}",tags=[Tags.items])
 async def update_item(item_id: int, item: Annotated[Item, Body(embed=True)], user: User, importance: Annotated[int, Body()]):
     results = {"item_id": item_id, "item": item,
                "user": user, "importance": importance}
