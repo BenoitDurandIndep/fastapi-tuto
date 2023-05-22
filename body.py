@@ -1,9 +1,11 @@
 from enum import Enum
 from typing import Annotated
 from fastapi import FastAPI, Path, Body
+from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field, HttpUrl
 
 # https://fastapi.tiangolo.com/tutorial/body-multiple-params/
+# https://fastapi.tiangolo.com/tutorial/body-updates/
 
 app = FastAPI()
 
@@ -18,7 +20,7 @@ class Item(BaseModel):
     description: str | None = Field(
         default=None, title="The description", max=300)
     price: float = Field(gt=0, description="Price of the item greater than 0")
-    tax: float | None = None
+    tax: float | None = 10.5
     tags: set[str] = set()
     image: list[Image] | None = None
 
@@ -38,9 +40,15 @@ class Tags(Enum):
     items = "items"
     users = "users"
 
+items = {
+    "foo": {"name": "Foo", "price": 50.2},
+    "bar": {"name": "Bar", "description": "The bartenders", "price": 62, "tax": 20.2},
+    "baz": {"name": "Baz", "description": None, "price": 50.2, "tax": 10.5, "tags": []},
+}
+
 @app.put("/items/{item_id}",tags=[Tags.items])
 async def update_item(
-    item_id: Annotated[int, Path(title="The ID of the item", ge=0, le=1000)],
+    item_id: Annotated[str, Path(title="The ID of the item")],#Annotated[int, Path(title="The ID of the item", ge=0, le=1000)],
     q: str | None = None,
     item: Item | None = None,
 ):
@@ -48,7 +56,13 @@ async def update_item(
     if q:
         results.update({"q": q})
     if item:
-        results.update({"item": item})
+        #results.update({"item": item})
+        stored_item_data = items[item_id]
+        stored_item_model=Item(**stored_item_data)
+        update_data=item.dict(exclude_unset=True)
+        updated_item=stored_item_model.copy(update=update_data)
+        items[item_id]=jsonable_encoder(updated_item)
+        results=items[item_id]
     return results
 
 
